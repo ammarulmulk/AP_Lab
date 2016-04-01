@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Ap lab by ammarulmulk</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Ap lab</h1>
+      <h2 class="project-tagline">Lab6</h2>
+      <a href="https://github.com/ammarulmulk/AP_Lab" class="btn">View on GitHub</a>
+      <a href="https://github.com/ammarulmulk/AP_Lab/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/ammarulmulk/AP_Lab/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <p>package my_package;</p>
+
+<p>//various imports
+import java.io.<em>;
+import java.util.</em>;
+import java.net.*;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;</p>
+
+<p>//the crawler class
+public class Crawler implements Runnable {</p>
+
+<pre><code>private Thread t;
+private String threadName;
+//Since we have to use at least 3 threads I divide the total files into 3 queues one for each thread
+static Queue path_queue1= new LinkedList();
+static Queue path_queue2= new LinkedList();
+static Queue path_queue3= new LinkedList();
+static Queue name_queue1= new LinkedList();
+static Queue name_queue2= new LinkedList();
+static Queue name_queue3= new LinkedList();
+
+public static Map&lt;String, String&gt; file_content=new HashMap&lt;String, String&gt;();
+public static List&lt;String&gt; file_names = new ArrayList&lt;&gt;(); //stores list of all file names
+public static List&lt;String&gt; file_paths = new ArrayList&lt;&gt;(); //stores list of all file paths
+
+
+
+//function used to get file names and paths
+public static void GetFileDetails(final File folder) {  
+    for (final File fileEntry : folder.listFiles()) {
+        if (fileEntry.isDirectory()) {
+            GetFileDetails(fileEntry);
+        } else {
+            file_names.add(fileEntry.getName());
+            file_paths.add(fileEntry.getAbsolutePath());
+
+        }
+    }
+}
+
+
+//function used to get content of files
+public static String GetFileContent(String filepath) {
+    String my_string;
+    File file = new File(filepath);
+    StringBuilder builder = new StringBuilder();
+    if (!file.exists()) {
+        throw new RuntimeException("File not found");
+    }
+    BufferedReader reader = null;
+    try {
+        reader = new BufferedReader(new FileReader(file));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            builder.append(line);
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    } finally {
+        if (reader != null) {
+            try {
+                reader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    my_string=builder.toString();
+    return my_string;
+
+}
+
+
+//create a crawler class instance with the given string as the thread name
+Crawler(String name){
+    threadName =name;
+    System.out.println("Creating"+ threadName);
+}
+
+
+
+//run method that calls the run thread function
+public void run(){
+    System.out.println("Running"+ threadName);
+    run_thread();
+
+}
+
+
+//execute the thread
+private synchronized void run_thread(){
+
+    try {
+
+        File my_file;
+        double bytes;
+        double kilobytes;
+        String my_string;
+        Scanner in = new Scanner(System.in);
+
+        if(threadName=="Thread-1"){
+            while(name_queue1.size()!=0){
+            my_file=new File((String) path_queue1.element());
+            bytes = my_file.length();
+            kilobytes = (bytes / 1024);
+            BufferedWriter b1= new BufferedWriter(new FileWriter("E:/Index.txt",true));
+            b1.write(""+name_queue1.element()+"\t" + path_queue1.element()+"\t\t"+bytes+" bytes");
+            b1.newLine();
+            b1.close();
+            name_queue1.remove();
+            path_queue1.remove();}
+
+            System.out.println("Enter a string to search");
+            my_string = in.nextLine();
+
+             File a_file;
+             String a_name;
+
+
+            //store content of file in file_content
+            for (String x : file_paths) {
+                 a_file = new File(x);
+                 a_name=a_file.getName();
+                file_content.put(a_name,GetFileContent(x));
+            }
+
+
+
+
+            //return file names which contain the string
+            for (Map.Entry&lt;String, String&gt; entry : file_content.entrySet())
+            {
+                 if(entry.getValue().toLowerCase().contains(my_string.toLowerCase())){
+                   System.out.println("String Found in File: "+entry.getKey());}
+            }
+        }
+
+
+        if(threadName=="Thread-2"){
+            while(name_queue2.size()!=0){
+            //System.out.println(""+name_queue2.element()+"\t" + path_queue2.element());    
+            my_file=new File((String) path_queue2.element());
+            bytes = my_file.length();
+            kilobytes = (bytes / 1024);
+            BufferedWriter b2= new BufferedWriter(new FileWriter("E:/Index.txt",true));
+            b2.write(""+name_queue2.element()+"\t" + path_queue2.element()+"\t\t"+bytes+" bytes");
+            b2.newLine();
+            b2.close();
+            name_queue2.remove();
+            path_queue2.remove();}
+        }
+
+
+        if(threadName=="Thread-3"){
+            while(name_queue3.size()!=0){
+            //System.out.println(""+name_queue3.element()+"\t" + path_queue3.element());    
+            my_file=new File((String) path_queue3.element());
+            bytes = my_file.length();
+            kilobytes = (bytes / 1024);
+            BufferedWriter b3= new BufferedWriter(new FileWriter("E:/Index.txt",true));
+            b3.write(""+name_queue3.element()+"\t" + path_queue3.element()+"\t\t"+bytes+" bytes");
+            b3.newLine();
+            b3.close();
+            name_queue3.remove();
+            path_queue3.remove();}
+
+            System.out.println("Thread 3 is sleeping till Thread 1 returns search result(max is 30 seconds)");
+            Thread.sleep(30000);
+            System.out.println("Enter a string to search again");
+            my_string = in.nextLine();
+
+             File b_file;
+             String b_name;
+
+
+            //store content of file in file_content
+            for (String x : file_paths) {
+                 b_file = new File(x);
+                 b_name=b_file.getName();
+                file_content.put(b_name,GetFileContent(x));
+            }
+
+
+
+
+            //return file names which contain the string
+            for (Map.Entry&lt;String, String&gt; entry : file_content.entrySet())
+            {
+                 if(entry.getValue().toLowerCase().contains(my_string.toLowerCase())){
+                   System.out.println("String Found in File: "+entry.getKey());}
+            }
+
+        }
+
+
+
+
+
+    } catch (FileNotFoundException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+    } catch (UnsupportedEncodingException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+    } catch (IOException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+    } catch (InterruptedException e) {
+        // TODO Auto-generated catch block
+        e.printStackTrace();
+    }       
+}
+
+
+
+public void start ()
+   {
+      System.out.println("Starting " +  threadName );
+      if (t == null)
+      {
+         t = new Thread (this, threadName);
+         t.start ();
+      }
+   }
+
+
+    public static void main(String [ ] args){
+
+
+        String my_string2;
+        Scanner in2 = new Scanner(System.in);
+        System.out.println("Please enter the path of root directory you want to start crawling from:");
+        System.out.println("(Note!!! use / symbol  and directory cant be root of partition)");
+        my_string2 = in2.nextLine();
+
+
+        final File folder = new File(my_string2);
+        GetFileDetails(folder);
+
+        float total_size=file_paths.size();
+        int division=(int)Math.ceil(total_size/3);
+
+
+        int x;
+        for (x=0;x&lt;division;x++) {
+            path_queue1.add(file_paths.get(x));
+            name_queue1.add(file_names.get(x));
+        }
+
+        for (;x&lt;division+division;x++) {
+            path_queue2.add(file_paths.get(x));
+            name_queue2.add(file_names.get(x));
+        }
+
+        for (;x&lt;total_size;x++) {
+            path_queue3.add(file_paths.get(x));
+            name_queue3.add(file_names.get(x));
+        }
+
+        Crawler c1= new Crawler("Thread-1");
+        c1.start();
+
+        Crawler c2= new Crawler("Thread-2");
+        c2.start();
+
+        Crawler c3= new Crawler("Thread-3");
+        c3.start();
+}
+</code></pre>
+
+<p>}</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/ammarulmulk/AP_Lab">Ap lab</a> is maintained by <a href="https://github.com/ammarulmulk">ammarulmulk</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
